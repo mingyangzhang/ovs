@@ -64,6 +64,7 @@ OVS_NO_RETURN static void usage(void);
 int
 main(int argc, char *argv[])
 {
+    printf("\n\n\n\n\n!!!!!!!!!!! vswitch main !!!!!!!!!!!!\n\n\n\n");
     char *unixctl_path = NULL;
     struct unixctl_server *unixctl;
     char *remote;

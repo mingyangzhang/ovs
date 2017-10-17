@@ -1109,6 +1109,7 @@ upcall_xlate(struct udpif *udpif, struct upcall *upcall,
         ofpbuf_use_const(&upcall->put_actions,
                          odp_actions->data, odp_actions->size);
     } else {
+        printf("\n\n\n\n\n!!!!!!!!!!! upcall miss !!!!!!!!!!!!\n\n\n\n");
         /* upcall->put_actions already initialized by upcall_receive(). */
         compose_slow_path(udpif, &upcall->xout, upcall->flow,
                           upcall->flow->in_port.odp_port,
@@ -1209,6 +1210,7 @@ static int
 process_upcall(struct udpif *udpif, struct upcall *upcall,
                struct ofpbuf *odp_actions, struct flow_wildcards *wc)
 {
+    printf("\n\n\n\n\n!!!!!!!!!!! process upcall !!!!!!!!!!!!\n\n\n\n");
     const struct nlattr *userdata = upcall->userdata;
     const struct dp_packet *packet = upcall->packet;
     const struct flow *flow = upcall->flow;
