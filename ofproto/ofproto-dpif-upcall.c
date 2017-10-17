@@ -1110,6 +1110,7 @@ upcall_xlate(struct udpif *udpif, struct upcall *upcall,
                          odp_actions->data, odp_actions->size);
     } else {
         printf("\n\n\n\n\n!!!!!!!!!!! upcall miss !!!!!!!!!!!!\n\n\n\n");
+        printf(upcall->flow->nw_src);
         /* upcall->put_actions already initialized by upcall_receive(). */
         compose_slow_path(udpif, &upcall->xout, upcall->flow,
                           upcall->flow->in_port.odp_port,
