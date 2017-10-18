@@ -1,3 +1,5 @@
+#include <config.h>
+
 #include "flow.h"
 #include "dp-packet.h"
 

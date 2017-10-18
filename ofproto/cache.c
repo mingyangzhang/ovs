@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <inttypes.h>
@@ -111,7 +112,7 @@ void cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
 //    table.num_of_queue++;
 }
 
-dp_packet* cache_pop(int queue_id){
+struct dp_packet* cache_pop(int queue_id){
     if(queue_id<0 || queue_id>table.num_of_queue-1){
         return NULL;
     }
