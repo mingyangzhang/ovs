@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <inttypes.h>
 
+#include "cache.h"
 #include "flow.h"
 #include "dp-packet.h"
 
