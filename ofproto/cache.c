@@ -4,7 +4,9 @@
 
 #include "cache.h"
 #include "flow.h"
+#include "dpif.h"
 #include "dp-packet.h"
+#include "packets.h"
 
 #define BOOL int
 #define TRUE 1
