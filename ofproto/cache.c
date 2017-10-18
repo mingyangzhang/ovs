@@ -43,27 +43,27 @@ struct cache_table_head {
 
 struct cache_node {
     struct cache_node *next;
-    dp_packet *pckt;
+    struct dp_packet *pckt;
 };
 
 typedef struct cache_node* Node;
 typedef struct cache_table_head* QueueHead;
 
 BOOL compare_cache_key(struct cache_key *key1, struct cache_key *key2){
-    if(key1->in_port != key2->in_port)
-        return FALSE;
-    if(key1->dl_dst != key2->dl_dst)
-        return FALSE;
-    if(key1->dl_src != key2->dl_src)
-        return FALSE;
-    if(key1->nw_src != key2->nw_src)
-        return FALSE;
-    if(key1->nw_dst != key2->nw_dst)
-        return FALSE;
-    if(key1->tp_src != key2->tp_src)
-        return FALSE;
-    if(key1->tp_dst != key2->tp_dst)
-        return FALSE;
+//    if(key1->in_port != key2->in_port)
+//        return FALSE;
+//    if(key1->dl_dst != key2->dl_dst)
+//        return FALSE;
+//    if(key1->dl_src != key2->dl_src)
+//        return FALSE;
+//    if(key1->nw_src != key2->nw_src)
+//        return FALSE;
+//    if(key1->nw_dst != key2->nw_dst)
+//        return FALSE;
+//    if(key1->tp_src != key2->tp_src)
+//        return FALSE;
+//    if(key1->tp_dst != key2->tp_dst)
+//        return FALSE;
     return TRUE;
 }
 
@@ -124,7 +124,7 @@ dp_packet* cache_pop(int queue_id){
     }
     Node p = qhead->queue_head;
     qhead->queue_head = p->next;
-    dp_packet * packet = p->pckt;
+    struct dp_packet * packet = p->pckt;
     free(p);
     return packet;
 }
