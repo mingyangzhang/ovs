@@ -1104,6 +1104,7 @@ upcall_xlate(struct udpif *udpif, struct upcall *upcall,
         flow_get_metadata(upcall->flow, &pin->up.flow_metadata);
         pin->send_len = 0; /* Not used for flow table misses. */
         pin->miss_type = OFPROTO_PACKET_IN_NO_MISS;
+        printf("\n\n\n\n!!!!!send packet in!!!!! ofproto-dpif-upcall line 1108\n\n\n\n\n");
         ofproto_dpif_send_packet_in(upcall->ofproto, pin);
     }
 
