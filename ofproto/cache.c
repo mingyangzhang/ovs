@@ -13,6 +13,8 @@
 #define TRUE 1
 #define FALSE 0
 
+int QUEUE_ID = 0;
+
 struct cache_table {
     int num_of_queue;
     struct cache_table_head *head;
@@ -65,9 +67,9 @@ BOOL compare_eth_addr(const struct eth_addr* eth_addr1, const struct eth_addr* e
 BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key2){
     if(key1->in_port.ofp_port != key2->in_port.ofp_port)
         return FALSE;
-    if(~compare_eth_addr(&key1->dl_dst, &key2->dl_dst))
+    if(compare_eth_addr(&key1->dl_dst, &key2->dl_dst)!=TRUE)
         return FALSE;
-    if(~compare_eth_addr(&key1->dl_src, &key2->dl_src))
+    if(compare_eth_addr(&key1->dl_src, &key2->dl_src)!=TRUE)
         return FALSE;
     if(key1->nw_src != key2->nw_src)
         return FALSE;
@@ -80,10 +82,9 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
     return TRUE;
 }
 
-void cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
-    printf("\n\n\n\ncache enqueque\n\n\n\n");
+int cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
     struct cache_table_head *head = table.head;
-    // 根据flow构造匹配用的key
+
     struct cache_key upcall_key = {
        .in_port = flow->in_port,
        .dl_dst = flow->dl_dst,
@@ -93,7 +94,7 @@ void cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
        .tp_src = flow->tp_src,
        .tp_dst = flow->tp_dst,
     };
-    // 搜索匹配的队列头，如果存在就加入packet
+
     while(head != NULL){
        if(compare_cache_key(head->key, &upcall_key)){
            Node node = (Node)malloc(sizeof(struct cache_node));
@@ -101,41 +102,39 @@ void cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
            node->pckt = packet;
            head->queue_tail->next = node;
            head->queue_tail = node;
-           return;
+           return head->queue_id;
        }
        head = head->next;
     }
-    // 添加新的队列头，插入packet
+
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
-    qhead->key = upcall_key;
+    qhead->key = &upcall_key;
     Node node = (Node)malloc(sizeof(struct cache_node));
     node->next = NULL;
     node->pckt = packet;
     qhead->queue_head = node;
     qhead->queue_tail = qhead->queue_head;
-    qhead->queue_id = table.num_of_queue;
+    qhead->queue_id = QUEUE_ID++;
     qhead->next = NULL;
     if(table.head == NULL){
        table.head = qhead;
        table.tail = table.head;
        table.num_of_queue++;
-       return;
+       return qhead->queue_id;
     }
 
     table.tail->next = qhead;
     table.tail = qhead;
     table.num_of_queue++;
+    return qhead->queue_id;
 }
 
 struct dp_packet* cache_pop(int queue_id){
-    if(queue_id<0 || queue_id>table.num_of_queue-1){
-        return NULL;
-    }
     QueueHead qhead = table.head;
-    while(queue_id-->0){
+    while(qhead!=NULL && qhead->queue_id!=queue_id){
         qhead = qhead->next;
     }
-    if(qhead->queue_head==NULL){
+    if(qhead==NULL || qhead->queue_head==NULL){
         return NULL;
     }
     Node p = qhead->queue_head;
