@@ -61,6 +61,7 @@
 #include "unixctl.h"
 #include "openvswitch/vlog.h"
 #include "bundles.h"
+#include "cache.h"
 
 VLOG_DEFINE_THIS_MODULE(ofproto);
 
@@ -3361,6 +3362,66 @@ ofproto_check_ofpacts(struct ofproto *ofproto,
 }
 
 static enum ofperr
+handle_buffer_pop(struct ofconn *ofconn, const struct ofp_header *oh){
+	struct ofproto *p = ofconn_get_ofproto(ofconn);
+    struct ofputil_packet_out po;
+    struct dp_packet *payload;
+    uint64_t ofpacts_stub[1024 / 8];
+    struct ofpbuf ofpacts;
+    struct flow flow;
+    enum ofperr error;
+
+   // COVERAGE_INC(ofproto_packet_out);
+
+    error = reject_slave_controller(ofconn);
+    if (error) {
+        goto exit;
+    }
+
+    /* Decode message. */
+    ofpbuf_use_stub(&ofpacts, ofpacts_stub, sizeof ofpacts_stub);
+    error = ofputil_decode_packet_out(&po, oh, &ofpacts);
+    if (error) {
+        goto exit_free_ofpacts;
+    }
+    if (ofp_to_u16(po.in_port) >= p->max_ports
+	&& ofp_to_u16(po.in_port) < ofp_to_u16(OFPP_MAX)) {
+        error = OFPERR_OFPBRC_BAD_PORT;
+        goto exit_free_ofpacts;
+    }
+
+    /* Get payload. */
+	payload = cache_pop(po.buffer_id);
+
+    /* Verify actions against packet, then send packet if successful. */
+    flow_extract(payload, &flow);
+    flow.in_port.ofp_port = po.in_port;
+
+    /* Check actions like for flow mods.  We pass a 'table_id' of 0 to
+     * ofproto_check_consistency(), which isn't strictly correct because these
+     * actions aren't in any table.  This is OK as 'table_id' is only used to
+     * check instructions (e.g., goto-table), which can't appear on the action
+     * list of a packet-out. */
+    error = ofpacts_check_consistency(po.ofpacts, po.ofpacts_len,
+	&flow, u16_to_ofp(p->max_ports),
+	0, p->n_tables,
+	ofconn_get_protocol(ofconn));
+    if (!error) {
+        error = ofproto_check_ofpacts(p, po.ofpacts, po.ofpacts_len);
+        if (!error) {
+            error = p->ofproto_class->packet_out(p, payload, &flow,
+			po.ofpacts, po.ofpacts_len);
+        }
+    }
+    dp_packet_delete(payload);
+
+exit_free_ofpacts:
+    ofpbuf_uninit(&ofpacts);
+exit:
+    return error;
+}
+
+static enum ofperr
 handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
 {
     struct ofproto *p = ofconn_get_ofproto(ofconn);
@@ -5296,6 +5357,10 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                       ofm.fm.ofpacts_len);
     }
     if (!error) {
+		// packet out if buffer_id is set.
+		if(ofm.fm.buffer_id != UINT32_MAX){
+			handle_buffer_pop(ofconn, oh);
+		}
         struct flow_mod_requester req;
 
         req.ofconn = ofconn;

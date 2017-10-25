@@ -13,7 +13,7 @@
 #define TRUE 1
 #define FALSE 0
 
-int QUEUE_ID = 0;
+uint32_t QUEUE_ID = 0;
 
 struct cache_table {
     int num_of_queue;
@@ -37,7 +37,7 @@ struct cache_key {
 };
 
 struct cache_table_head {
-    int queue_id;
+    uint32_t queue_id;
     struct cache_table_head *next;
     struct cache_key *key;
     struct cache_node *queue_head;
@@ -82,7 +82,7 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
     return TRUE;
 }
 
-int cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
+uint32_t cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
     struct cache_table_head *head = table.head;
 
     struct cache_key upcall_key = {
@@ -129,7 +129,7 @@ int cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
     return qhead->queue_id;
 }
 
-struct dp_packet* cache_pop(int queue_id){
+struct dp_packet* cache_pop(uint32_t queue_id){
     QueueHead qhead = table.head;
     while(qhead!=NULL && qhead->queue_id!=queue_id){
         qhead = qhead->next;
