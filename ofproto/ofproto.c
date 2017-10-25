@@ -3392,28 +3392,30 @@ handle_buffer_pop(struct ofconn *ofconn, const struct ofp_header *oh){
 
     /* Get payload. */
 	payload = cache_pop(po.buffer_id);
+	while(payload!=NULL){
+		/* Verify actions against packet, then send packet if successful. */
+		flow_extract(payload, &flow);
+		flow.in_port.ofp_port = po.in_port;
 
-    /* Verify actions against packet, then send packet if successful. */
-    flow_extract(payload, &flow);
-    flow.in_port.ofp_port = po.in_port;
-
-    /* Check actions like for flow mods.  We pass a 'table_id' of 0 to
-     * ofproto_check_consistency(), which isn't strictly correct because these
-     * actions aren't in any table.  This is OK as 'table_id' is only used to
-     * check instructions (e.g., goto-table), which can't appear on the action
-     * list of a packet-out. */
-    error = ofpacts_check_consistency(po.ofpacts, po.ofpacts_len,
-	&flow, u16_to_ofp(p->max_ports),
-	0, p->n_tables,
-	ofconn_get_protocol(ofconn));
-    if (!error) {
-        error = ofproto_check_ofpacts(p, po.ofpacts, po.ofpacts_len);
-        if (!error) {
-            error = p->ofproto_class->packet_out(p, payload, &flow,
-			po.ofpacts, po.ofpacts_len);
-        }
-    }
-    dp_packet_delete(payload);
+		/* Check actions like for flow mods.  We pass a 'table_id' of 0 to
+		 * ofproto_check_consistency(), which isn't strictly correct because these
+		 * actions aren't in any table.  This is OK as 'table_id' is only used to
+		 * check instructions (e.g., goto-table), which can't appear on the action
+		 * list of a packet-out. */
+		error = ofpacts_check_consistency(po.ofpacts, po.ofpacts_len,
+		&flow, u16_to_ofp(p->max_ports),
+		0, p->n_tables,
+		ofconn_get_protocol(ofconn));
+		if (!error) {
+			error = ofproto_check_ofpacts(p, po.ofpacts, po.ofpacts_len);
+			if (!error) {
+				error = p->ofproto_class->packet_out(p, payload, &flow,
+				po.ofpacts, po.ofpacts_len);
+			}
+		}
+		dp_packet_delete(payload);
+        payload = cache_pop(po.buffer_id);
+	}
 
 exit_free_ofpacts:
     ofpbuf_uninit(&ofpacts);

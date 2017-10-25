@@ -82,7 +82,7 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
     return TRUE;
 }
 
-uint32_t cache_enqueue(const struct flow *flow, const struct dp_packet *packet){
+uint32_t cache_enqueue(const struct flow *flow, struct dp_packet *packet){
     struct cache_table_head *head = table.head;
 
     struct cache_key upcall_key = {
