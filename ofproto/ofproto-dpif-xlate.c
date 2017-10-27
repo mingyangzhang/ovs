@@ -4520,11 +4520,23 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
         && ctx->rule && rule_is_table_miss(&ctx->rule->up)) {
         reason = OFPR_EXPLICIT_MISS;
     }
-
-    size_t packet_len = dp_packet_size(packet);
-	if(reason == OFPR_EXPLICIT_MISS){
-		printf("\n\n\n\n upcall missed! \n\n\n\n");
+	/* test for packet in */
+	if(reason == OFPR_NO_MATCH){
+		printf("\n\n\n OFPR_NO_MATCH \n\n\n");
 	}
+	if(reason == OFPR_ACTION){
+		printf("\n\n\n OFPR_ACTION \n\n\n");
+	}
+	if(reason == OFPR_EXPLICIT_MISS){
+		printf("\n\n\n OFPR_EXPLICIT_MISS \n\n\n");
+	}
+	if(reason == OFPR_IMPLICIT_MISS){
+		printf("\n\n\n OFPR_IMPLICIT_MISS \n\n\n");
+	}
+	if(reason == OFPR_N_REASONS){
+		printf("\n\n\n OFPR_N_REASONS \n\n\n");
+	}
+    size_t packet_len = dp_packet_size(packet);
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
@@ -4866,6 +4878,7 @@ xlate_output_action(struct xlate_ctx *ctx,
                                    : ctx->in_action_set ? OFPR_ACTION_SET
                                    : OFPR_ACTION),
                                   0, NULL, 0);
+		printf("\n\n\n call execute_controller_action \n\n\n");
         break;
     case OFPP_NONE:
         break;
