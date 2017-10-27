@@ -4522,7 +4522,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     }
 
     size_t packet_len = dp_packet_size(packet);
-
+	printf("\n\n\n\n upcall missed! \n\n\n\n");
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
