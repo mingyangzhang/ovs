@@ -67,7 +67,8 @@ struct ovs_vswitchd_exit_args {
 
 int
 main(int argc, char *argv[])
-{
+{	
+	printf("\n\n\n\n vswitchd started! \n\n\n\n");
     char *unixctl_path = NULL;
     struct unixctl_server *unixctl;
     char *remote;
