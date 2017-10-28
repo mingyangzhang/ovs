@@ -65,6 +65,8 @@
 #include "tunnel.h"
 #include "util.h"
 
+#include "cache.h"
+
 COVERAGE_DEFINE(xlate_actions);
 COVERAGE_DEFINE(xlate_actions_oversize);
 COVERAGE_DEFINE(xlate_actions_too_many_output);
@@ -4520,23 +4522,9 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
         && ctx->rule && rule_is_table_miss(&ctx->rule->up)) {
         reason = OFPR_EXPLICIT_MISS;
     }
-	/* test for packet in */
-	if(reason == OFPR_NO_MATCH){
-		printf("\n\n\n OFPR_NO_MATCH \n\n\n");
-	}
-	if(reason == OFPR_ACTION){
-		printf("\n\n\n OFPR_ACTION \n\n\n");
-	}
-	if(reason == OFPR_EXPLICIT_MISS){
-		printf("\n\n\n OFPR_EXPLICIT_MISS \n\n\n");
-	}
-	if(reason == OFPR_IMPLICIT_MISS){
-		printf("\n\n\n OFPR_IMPLICIT_MISS \n\n\n");
-	}
-	if(reason == OFPR_N_REASONS){
-		printf("\n\n\n OFPR_N_REASONS \n\n\n");
-	}
     size_t packet_len = dp_packet_size(packet);
+	uint32_t buffer_id;
+	buffer_id = cache_enqueue(ctx->xin->flow, ctx->xin->packet);
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
@@ -4555,6 +4543,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
                     .userdata_len = userdata_len,
                 }
             },
+			.buffer_id = buffer_id,
             .max_len = len,
         },
     };
