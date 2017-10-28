@@ -143,6 +143,7 @@ struct dp_packet* cache_pop(uint32_t queue_id){
     qhead->queue_head = p->next;
     struct dp_packet * packet = p->pckt;
     free(p);
+    qhead->num_of_packet--;
     return packet;
 }
 
@@ -168,12 +169,12 @@ void print_flow_key(struct cache_key* key){
     printf("dl_src");
     int i;
     for(i=0;i<3;i++){
-        printf("%" PRIu16 ".", key->dl_src->be16[i]);
+        printf("%" PRIu16 ".", key->dl_src.be16[i]);
     }
     printf("\n");
     printf("dl_dst");
     for(i=0;i<3;i++){
-        printf("%" PRIu16 ".", key->dl_dst->be16[i]);
+        printf("%" PRIu16 ".", key->dl_dst.be16[i]);
     }
     printf("\n");
 }

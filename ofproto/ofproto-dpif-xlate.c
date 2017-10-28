@@ -4561,7 +4561,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
         entry->controller.ofproto = ctx->xbridge->ofproto;
         entry->controller.am = am;
     }
-
+	cache_pop(buffer_id);
     dp_packet_delete(packet);
 }
 
