@@ -83,7 +83,6 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
 }
 
 uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
-    printf("\n enqueue \n");
     struct cache_table_head *head = table.head;
     struct cache_key upcall_key = {
        .in_port = flow->in_port,
@@ -96,7 +95,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     };
 
     while(head != NULL){
-       if(compare_cache_key(head->key, &upcall_key)){
+       if(compare_cache_key(head->key, &upcall_key)==TRUE){
            Node node = (Node)malloc(sizeof(struct cache_node));
            node->next = NULL;
            node->pckt = packet;
@@ -126,7 +125,6 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     table.tail->next = qhead;
     table.tail = qhead;
     table.num_of_queue++;
-    printf("\nnum_of_queue: %d\n", table.num_of_queue);
     return qhead->queue_id;
 }
 
@@ -143,4 +141,14 @@ struct dp_packet* cache_pop(uint32_t queue_id){
     struct dp_packet * packet = p->pckt;
     free(p);
     return packet;
+}
+
+void print_table_info(){
+  printf("\nInfo about cache table.\n");
+  printf("Queue number: %d\n", table.num_of_queue);
+  head = table.head;
+  while(head!=NULL){
+    printf("QUEUE ID%" PRIu32 "\n", head->queue_id);
+    head = head->next;
+  }
 }
