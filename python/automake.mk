@@ -6,6 +6,7 @@ ovstest_pyfiles = \
 	python/ovstest/tests.py \
 	python/ovstest/udp.py \
 	python/ovstest/util.py \
+	python/tow_hosts_topo.py \
 	python/ovstest/vswitch.py
 
 ovs_pyfiles = \
