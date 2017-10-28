@@ -82,9 +82,9 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
     return TRUE;
 }
 
-uint32_t cache_enqueue(struct flow *flow, struct dp_packet *packet){
+uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
+    printf("\n enqueue \n");
     struct cache_table_head *head = table.head;
-
     struct cache_key upcall_key = {
        .in_port = flow->in_port,
        .dl_dst = flow->dl_dst,
@@ -126,6 +126,7 @@ uint32_t cache_enqueue(struct flow *flow, struct dp_packet *packet){
     table.tail->next = qhead;
     table.tail = qhead;
     table.num_of_queue++;
+    printf("\nnum_of_queue: %d\n", table.num_of_queue);
     return qhead->queue_id;
 }
 
