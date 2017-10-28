@@ -117,7 +117,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     qhead->queue_tail = qhead->queue_head;
     qhead->queue_id = QUEUE_ID++;
     qhead->next = NULL;
-    qhead->num_of_packet++;
+    qhead->num_of_packet = 1;
     if(table.head == NULL){
        table.head = qhead;
        table.tail = table.head;
@@ -147,21 +147,21 @@ struct dp_packet* cache_pop(uint32_t queue_id){
 }
 
 void print_table_info(){
-    printf("\nInfo about cache table.\n");
+    printf("\n-------------Info about cache table-------------n");
     printf("Queue number: %d\n", table.num_of_queue);
     QueueHead head = table.head;
     while(head!=NULL){
       printf("queue id: % " PRIu32 "\n", head->queue_id);
       printf("packet number: %d\n", head->num_of_packet);
-      print_flow_key(head->cache_key);
+      print_flow_key(head->key);
       head = head->next;
     }
 }
 
 void print_flow_key(struct cache_key* key){
-    printf("\nInfo about flow key.\n");
-    printf("nw_src: % \n" PRIu32 "\n", key->nw_src);
-    printf("nw_dst: % \n" PRIu32 "\n", key->nw_dst);
-    printf("tp_src: % \n" PRIu16 "\n", key->tp_src);
-    printf("tp_dst: % \n" PRIu16 "\n", key->tp_dst);
+    printf("\n-------------Info about flow key-------------n");
+    printf("nw_src: %" PRIu32 "\n", key->nw_src);
+    printf("nw_dst: %" PRIu32 "\n", key->nw_dst);
+    printf("tp_src: %" PRIu16 "\n", key->tp_src);
+    printf("tp_dst: %" PRIu16 "\n", key->tp_dst);
 }
