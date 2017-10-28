@@ -147,7 +147,7 @@ struct dp_packet* cache_pop(uint32_t queue_id){
 }
 
 void print_table_info(){
-    printf("\n-------------Info about cache table-------------n");
+    printf("\n-------------Info about cache table-------------\n");
     printf("Queue number: %d\n", table.num_of_queue);
     QueueHead head = table.head;
     while(head!=NULL){
@@ -159,9 +159,21 @@ void print_table_info(){
 }
 
 void print_flow_key(struct cache_key* key){
-    printf("\n-------------Info about flow key-------------n");
+    printf("\n-------------Info about flow key-------------\n");
     printf("nw_src: %" PRIu32 "\n", key->nw_src);
     printf("nw_dst: %" PRIu32 "\n", key->nw_dst);
     printf("tp_src: %" PRIu16 "\n", key->tp_src);
     printf("tp_dst: %" PRIu16 "\n", key->tp_dst);
+
+    printf("dl_src");
+    int i;
+    for(i=0;i<3;i++){
+        printf("%" PRIu16 ".", key->dl_src->be16[i]);
+    }
+    printf("\n");
+    printf("dl_dst");
+    for(i=0;i<3;i++){
+        printf("%" PRIu16 ".", key->dl_dst->be16[i]);
+    }
+    printf("\n");
 }
