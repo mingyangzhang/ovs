@@ -4525,7 +4525,6 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     size_t packet_len = dp_packet_size(packet);
     uint32_t buffer_id;
     buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
-    print_table_info();
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
@@ -4561,7 +4560,6 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
         entry->controller.ofproto = ctx->xbridge->ofproto;
         entry->controller.am = am;
     }
-	cache_pop(buffer_id);
     dp_packet_delete(packet);
 }
 
