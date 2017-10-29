@@ -97,13 +97,19 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
 
     while(head != NULL){
        if(compare_cache_key(head->key, &upcall_key)==TRUE){
-           Node node = (Node)malloc(sizeof(struct cache_node));
-           node->next = NULL;
-           node->pckt = packet;
-           head->queue_tail->next = node;
-           head->queue_tail = node;
-           head->num_of_packet++;
-           return head->queue_id;
+            Node node = (Node)malloc(sizeof(struct cache_node));
+            node->next = NULL;
+            node->pckt = packet;
+            if(head->queue_head==NULL){
+                head->queue_head = node;
+                head->queue_tail = node;
+                head->num_of_packet = 1;
+                return head->queue_id;
+            }
+            head->queue_tail->next = node;
+            head->queue_tail = node;
+            head->num_of_packet++;
+            return head->queue_id;
        }
        head = head->next;
     }
@@ -142,15 +148,14 @@ struct dp_packet* cache_pop(uint32_t queue_id){
     Node p = qhead->queue_head;
     qhead->queue_head = p->next;
     struct dp_packet * packet = p->pckt;
-    qhead->queue_head = p->next;
     free(p);
     qhead->num_of_packet--;
     return packet;
 }
 
 void print_table_info(){
-    printf("\n-------------Info about cache table-------------\n");
-    printf("Queue number: %d\n", table.num_of_queue);
+    printf("\n****************Info about cache table****************\n");
+    printf("queue number: %d\n", table.num_of_queue);
     QueueHead head = table.head;
     while(head!=NULL){
       printf("queue id: % " PRIu32 "\n", head->queue_id);
@@ -158,10 +163,11 @@ void print_table_info(){
       print_flow_key(head->key);
       head = head->next;
     }
+    printf("\n*****************************************************\n");
 }
 
 void print_flow_key(struct cache_key* key){
-    printf("\n-------------Info about flow key-------------\n");
+    printf("\n--------Info about flow key--------n");
     printf("nw_src: %" PRIu32 "\n", key->nw_src);
     printf("nw_dst: %" PRIu32 "\n", key->nw_dst);
     printf("tp_src: %" PRIu16 "\n", key->tp_src);
