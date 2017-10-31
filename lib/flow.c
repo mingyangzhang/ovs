@@ -773,6 +773,10 @@ miniflow_extract(struct dp_packet *packet, struct miniflow *dst)
 
         /* Push both source and destination address at once. */
         miniflow_push_words(mf, nw_src, &nh->ip_src, 1);
+		printf("\n Print ip src \n");
+		printf("%" PRIu16 "", nh->ip_src->hi);
+		printf("%" PRIu16 "", nh->ip_src->lo);
+		printf("\n End of print ip src \n");
         if (ct_nw_proto_p && !md->ct_orig_tuple_ipv6) {
             *ct_nw_proto_p = md->ct_orig_tuple.ipv4.ipv4_proto;
             if (*ct_nw_proto_p) {

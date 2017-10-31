@@ -3600,26 +3600,6 @@ handle_cache_pop(struct ofconn *ofconn, const struct ofp_header *oh)
     struct ofpbuf ofpacts;
     enum ofperr error;
 
-    // COVERAGE_INC(ofproto_packet_out);
-
-    error = reject_slave_controller(ofconn);
-    if (error) {
-        return error;
-    }
-
-    /* Decode message. */
-    ofpbuf_use_stub(&ofpacts, ofpacts_stub, sizeof ofpacts_stub);
-    error = ofputil_decode_packet_out(&po, oh, ofproto_get_tun_tab(p),
-                                      &ofpacts);
-    if (error) {
-        ofpbuf_uninit(&ofpacts);
-        return error;
-    }
-
-    po.ofpacts = ofpbuf_steal_data(&ofpacts);   /* Move to heap. */
-
-    error = ofproto_packet_out_init(p, ofconn, &opo, &po);
-    return error;
 }
 
 static enum ofperr
@@ -5830,7 +5810,7 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
 {
     printf("\nhandle flow mod!\n");
     printf("\nTest for packout init\n");
-    handle_cache_pop(ofconn, oh);
+    //handle_cache_pop(ofconn, oh);
     printf("\nTest end\n");
     struct ofproto *ofproto = ofconn_get_ofproto(ofconn);
     struct ofputil_flow_mod fm;
