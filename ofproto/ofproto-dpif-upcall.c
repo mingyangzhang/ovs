@@ -820,7 +820,9 @@ recv_upcalls(struct handler *handler)
 
         pkt_metadata_from_flow(&dupcall->packet.md, flow);
         flow_extract(&dupcall->packet, flow);
-
+        printf("\nflow in recv_upcalls");
+		printf("nw_src: %" PRIu32 "\n", flow->nw_src);
+		
         error = process_upcall(udpif, upcall,
                                &upcall->odp_actions, &upcall->wc);
         if (error) {
@@ -1149,7 +1151,8 @@ upcall_xlate(struct udpif *udpif, struct upcall *upcall,
 
     upcall->dump_seq = seq_read(udpif->dump_seq);
     upcall->reval_seq = seq_read(udpif->reval_seq);
-
+	printf("\nflow in upcall_xlate");
+	printf("nw_src: %" PRIu32 "\n", xin->flow->nw_src);
     xlate_actions(&xin, &upcall->xout);
     if (wc) {
         /* Convert the input port wildcard from OFP to ODP format. There's no
@@ -1344,6 +1347,8 @@ process_upcall(struct udpif *udpif, struct upcall *upcall,
 
     switch (upcall_type) {
     case MISS_UPCALL:
+		printf("\nflow in process_upcall");
+		printf("nw_src: %" PRIu32 "\n", upcall->flow->nw_src);
         upcall_xlate(udpif, upcall, odp_actions, wc);
         return 0;
 

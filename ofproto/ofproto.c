@@ -5808,10 +5808,10 @@ static enum ofperr
 handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
     OVS_EXCLUDED(ofproto_mutex)
 {
-    printf("\nhandle flow mod!\n");
+    /*printf("\nhandle flow mod!\n");
     printf("\nTest for packout init\n");
     //handle_cache_pop(ofconn, oh);
-    printf("\nTest end\n");
+    printf("\nTest end\n");*/
     struct ofproto *ofproto = ofconn_get_ofproto(ofconn);
     struct ofputil_flow_mod fm;
     uint64_t ofpacts_stub[1024 / 8];
