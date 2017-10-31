@@ -85,18 +85,17 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
 
 uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     struct cache_table_head *head = table.head;
-    struct cache_key upcall_key = {
-       .in_port = flow->in_port,
-       .dl_dst = flow->dl_dst,
-       .dl_src = flow->dl_src,
-       .nw_src = flow->nw_src,
-       .nw_dst = flow->nw_dst,
-       .tp_src = flow->tp_src,
-       .tp_dst = flow->tp_dst,
-    };
+    struct cache_key *upcall_key = (struct cache_key *)malloc(sizeof(struct cache_key));
+    upcall_key->in_port = flow->in_port;
+    upcall_key->dl_dst = flow->dl_dst;
+    upcall_key->dl_src = flow->dl_src;
+    upcall_key->nw_src = flow->nw_src;
+    upcall_key->nw_dst = flow->nw_dst;
+    upcall_key->tp_src = flow->tp_src;
+    upcall_key->tp_dst = flow->tp_dst;
 
     while(head != NULL){
-       if(compare_cache_key(head->key, &upcall_key)==TRUE){
+       if(compare_cache_key(head->key, upcall_key)==TRUE){
             Node node = (Node)malloc(sizeof(struct cache_node));
             node->next = NULL;
             node->pckt = packet;
@@ -115,7 +114,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     }
 
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
-    qhead->key = &upcall_key;
+    qhead->key = upcall_key;
     Node node = (Node)malloc(sizeof(struct cache_node));
     node->next = NULL;
     node->pckt = packet;
