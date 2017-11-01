@@ -5830,13 +5830,26 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                     ofproto->n_tables);
 	
 	/*if buffer id, packet out*/
-	struct flow *flow;
 	struct db_packet *packet;
+	struct ofproto_packet_out opo;
 	packet = cache_pop(0);
-	printf("\nextract flow in flow mod!\n");
-	flow_extract(packet, flow);
-	printf("\nflow in flow mod");
-	printf("nw_src: %" PRIu32 "\n", flow->nw_src);
+    if(packet != NULL){
+		printf("\nsend packet out\n");
+		opo.flow = &fm.match.flow;
+		opo.packet = packet;
+		opo.ofpacts = ofpacts;
+		opo.ofpacts_len = ofpacts_len;
+		
+		ovs_mutex_lock(&ofproto_mutex);
+		opo.version = ofproto->tables_version;
+		error = ofproto_packet_out_start(ofproto, &opo);
+		if (!error) {
+			ofproto_packet_out_finish(ofproto, &opo);
+		}
+		ovs_mutex_unlock(&ofproto_mutex);
+		printf("\nsend packet out end\n");
+	}
+
 
     if (!error) {
         struct openflow_mod_requester req = { ofconn, oh };
