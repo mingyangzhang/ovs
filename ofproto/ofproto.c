@@ -62,8 +62,10 @@
 #include "unaligned.h"
 #include "unixctl.h"
 #include "util.h"
+#include "flow.h"
 
 #include "cache.h"
+
 
 VLOG_DEFINE_THIS_MODULE(ofproto);
 
@@ -5808,10 +5810,7 @@ static enum ofperr
 handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
     OVS_EXCLUDED(ofproto_mutex)
 {
-    /*printf("\nhandle flow mod!\n");
-    printf("\nTest for packout init\n");
-    //handle_cache_pop(ofconn, oh);
-    printf("\nTest end\n");*/
+    printf("\nhandle flow mod!\n");
     struct ofproto *ofproto = ofconn_get_ofproto(ofconn);
     struct ofputil_flow_mod fm;
     uint64_t ofpacts_stub[1024 / 8];
@@ -5829,6 +5828,15 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                     &ofproto->vl_mff_map, &ofpacts,
                                     u16_to_ofp(ofproto->max_ports),
                                     ofproto->n_tables);
+	
+	/*if buffer id, packet out*/
+	struct flow *flow;
+	struct db_packet *packet;
+	packet = cache_pop(0);
+	printf("\nextract flow in flow mod!\n");
+	flow_extract(packet, flow);
+	printf("\nflow in flow mod");
+	printf("nw_src: %" PRIu32 "\n", flow->nw_src);
 
     if (!error) {
         struct openflow_mod_requester req = { ofconn, oh };

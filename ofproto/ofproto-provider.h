@@ -1921,7 +1921,7 @@ struct ofproto_packet_out {
     ovs_version_t version;
     struct dp_packet *packet;
     struct flow *flow;
-    struct ofpact *ofpacts;
+    struct ofpact *ofpacts;			//flow mod
     size_t ofpacts_len;
 
     void *aux;   /* Provider private. */

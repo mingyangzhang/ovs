@@ -4526,9 +4526,9 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     uint32_t buffer_id;
     buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
 	print_table_info();
-    if(buffer_id == UINT32_MAX){
-		return;
-	}
+ //    if(buffer_id == UINT32_MAX){
+	// 	return;
+	// }
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
@@ -4870,7 +4870,6 @@ xlate_output_action(struct xlate_ctx *ctx,
                                    : ctx->in_action_set ? OFPR_ACTION_SET
                                    : OFPR_ACTION),
                                   0, NULL, 0);
-		printf("\n\n\n call execute_controller_action \n\n\n");
         break;
     case OFPP_NONE:
         break;

@@ -746,32 +746,26 @@ miniflow_extract(struct dp_packet *packet, struct miniflow *dst)
 
     nw_frag = 0;
     if (OVS_LIKELY(dl_type == htons(ETH_TYPE_IP))) {
-		printf("\nOVS_LIKELY(dl_type == htons(ETH_TYPE_IP))\n");
         const struct ip_header *nh = data;
         int ip_len;
         uint16_t tot_len;
 
         if (OVS_UNLIKELY(size < IP_HEADER_LEN)) {
-			printf("\nOVS_UNLIKELY(size < IP_HEADER_LEN)\n");
             goto out;
         }
         ip_len = IP_IHL(nh->ip_ihl_ver) * 4;
 
         if (OVS_UNLIKELY(ip_len < IP_HEADER_LEN)) {
-			printf("\nOVS_UNLIKELY(ip_len < IP_HEADER_LEN)\n");
             goto out;
         }
         if (OVS_UNLIKELY(size < ip_len)) {
-			printf("\nOVS_UNLIKELY(size < ip_len)\n");
             goto out;
         }
         tot_len = ntohs(nh->ip_tot_len);
         if (OVS_UNLIKELY(tot_len > size || ip_len > tot_len)) {
-			printf("\nOVS_UNLIKELY(tot_len > size || ip_len > tot_len)\n");
             goto out;
         }
         if (OVS_UNLIKELY(size - tot_len > UINT8_MAX)) {
-			printf("\nOVS_UNLIKELY(size - tot_len > UINT8_MAX)\n");
             goto out;
         }
         dp_packet_set_l2_pad_size(packet, size - tot_len);
@@ -779,10 +773,6 @@ miniflow_extract(struct dp_packet *packet, struct miniflow *dst)
 
         /* Push both source and destination address at once. */
         miniflow_push_words(mf, nw_src, &nh->ip_src, 1);
-		printf("\n Print ip src \n");
-		printf("%" PRIu16 "", nh->ip_src.hi);
-		printf("%" PRIu16 "", nh->ip_src.lo);
-		printf("\n End of print ip src \n");
         if (ct_nw_proto_p && !md->ct_orig_tuple_ipv6) {
             *ct_nw_proto_p = md->ct_orig_tuple.ipv4.ipv4_proto;
             if (*ct_nw_proto_p) {
