@@ -152,6 +152,11 @@ struct dp_packet* cache_pop(uint32_t queue_id){
     return packet;
 }
 
+int num_of_queue(){
+    return table.num_of_queue;
+}
+
+
 void print_table_info(){
     printf("\n****************Info about cache table****************\n");
     printf("queue number: %d\n", table.num_of_queue);

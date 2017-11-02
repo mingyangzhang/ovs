@@ -3578,7 +3578,7 @@ handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
         free(po.ofpacts);
         return error;
     }
-
+    /*
     ovs_mutex_lock(&ofproto_mutex);
     opo.version = p->tables_version;
     error = ofproto_packet_out_start(p, &opo);
@@ -3586,7 +3586,7 @@ handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
         ofproto_packet_out_finish(p, &opo);
     }
     ovs_mutex_unlock(&ofproto_mutex);
-
+    */
     ofproto_packet_out_uninit(&opo);
     return error;
 }
@@ -5832,29 +5832,35 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
 	/*if buffer id, packet out*/
 	struct db_packet *packet;
 	struct ofproto_packet_out opo;
-	packet = cache_pop(0);
-    if(packet != NULL){
-		printf("\nsend packet out\n");
-		opo.flow = &fm.match.flow;
-		opo.packet = packet;
-		opo.ofpacts = ofpacts;
-		opo.ofpacts_len = ofpacts_len;
-		
-		ovs_mutex_lock(&ofproto_mutex);
-		opo.version = ofproto->tables_version;
-		error = ofproto_packet_out_start(ofproto, &opo);
-		if (!error) {
-			ofproto_packet_out_finish(ofproto, &opo);
-		}
-		ovs_mutex_unlock(&ofproto_mutex);
-		printf("\nsend packet out end\n");
-	}
+	int n = num_of_queue();
+    int i;
+    for(i=0; i<n; i++){
+        packet = cache_pop(i);
+        while(packet != NULL){
+    		printf("\nsend packet out, queue_id: %d\n", i);
+    		opo.flow = &fm.match.flow;
+    		opo.packet = packet;
+    		opo.ofpacts = fm.ofpacts;
+    		opo.ofpacts_len = fm.ofpacts_len;
+    		
+    		ovs_mutex_lock(&ofproto_mutex);
+    		opo.version = ofproto->tables_version;
+    		error = ofproto_packet_out_start(ofproto, &opo);
+    		if (!error) {
+    			ofproto_packet_out_finish(ofproto, &opo);
+    		}
+    		ovs_mutex_unlock(&ofproto_mutex);
+    		printf("\nsend packet out end, queue_id: %d\n", i);
+            packet = cache_pop(i);
+    	}
+    }
 
-
+    /*
     if (!error) {
         struct openflow_mod_requester req = { ofconn, oh };
         error = handle_flow_mod__(ofproto, &fm, &req);
     }
+    */
 
     ofpbuf_uninit(&ofpacts);
     return error;
