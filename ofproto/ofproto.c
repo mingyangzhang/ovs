@@ -3578,7 +3578,7 @@ handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
         free(po.ofpacts);
         return error;
     }
-    /*
+
     ovs_mutex_lock(&ofproto_mutex);
     opo.version = p->tables_version;
     error = ofproto_packet_out_start(p, &opo);
@@ -3586,22 +3586,8 @@ handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
         ofproto_packet_out_finish(p, &opo);
     }
     ovs_mutex_unlock(&ofproto_mutex);
-    */
     ofproto_packet_out_uninit(&opo);
     return error;
-}
-
-static enum ofperr
-handle_cache_pop(struct ofconn *ofconn, const struct ofp_header *oh)
-    OVS_EXCLUDED(ofproto_mutex)
-{
-    struct ofproto *p = ofconn_get_ofproto(ofconn);
-    struct ofputil_packet_out po;
-    struct ofproto_packet_out opo;
-    uint64_t ofpacts_stub[1024 / 8];
-    struct ofpbuf ofpacts;
-    enum ofperr error;
-
 }
 
 static enum ofperr
@@ -5830,12 +5816,10 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                     ofproto->n_tables);
 	
 	/*if buffer id, packet out*/
-	struct db_packet *packet;
-	struct ofproto_packet_out opo;
-	int n = num_of_queue();
-    int i;
-    for(i=0; i<n; i++){
-        packet = cache_pop(i);
+    if(fm.buffer_id ！= UINT32_MAX){
+    	struct db_packet *packet;
+    	struct ofproto_packet_out opo;
+        packet = cache_pop(fm.buffer_id);
         while(packet != NULL){
     		printf("\nsend packet out, queue_id: %d\n", i);
     		opo.flow = &fm.match.flow;
@@ -5851,16 +5835,14 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
     		}
     		ovs_mutex_unlock(&ofproto_mutex);
     		printf("\nsend packet out end, queue_id: %d\n", i);
-            packet = cache_pop(i);
+            packet = cache_pop(fm.buffer_id);
     	}
-    }
+    }  
 
-    /*
     if (!error) {
         struct openflow_mod_requester req = { ofconn, oh };
         error = handle_flow_mod__(ofproto, &fm, &req);
     }
-    */
 
     ofpbuf_uninit(&ofpacts);
     return error;
