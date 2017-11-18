@@ -4527,9 +4527,9 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
 	//print_table_info();
     // Do not send buffer id if it is not a new queue;
-    // if(buffer_id == UINT32_MAX){
-	// 	   return;
-	// }
+    if(buffer_id == UINT32_MAX){
+        return;
+    }
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,

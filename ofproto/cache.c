@@ -152,6 +152,29 @@ struct dp_packet* cache_pop(uint32_t queue_id){
     return packet;
 }
 
+uint32_t lookup_in_queue(struct flow *flow){
+    struct cache_key *key = (struct cache_key *)malloc(sizeof(struct cache_key));
+    key->in_port = flow->in_port;
+    key->dl_dst = flow->dl_dst;
+    key->dl_src = flow->dl_src;
+    key->nw_src = flow->nw_src;
+    key->nw_dst = flow->nw_dst;
+    key->tp_src = flow->tp_src;
+    key->tp_dst = flow->tp_dst;
+
+    struct cache_table_head *head = table.head;
+    uint32_t queue_id = UINT32_MAX;
+    while(head != NULL){
+       if(compare_cache_key(head->key, upcall_key)==TRUE && head->queue_head!=NULL){
+            queue_id = head->queue_id;
+            break;
+       }
+       head = head->next;
+    }
+    free(key);
+    return queue_id;
+}
+
 int num_of_queue(){
     return table.num_of_queue;
 }

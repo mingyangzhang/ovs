@@ -5816,12 +5816,12 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                     ofproto->n_tables);
 	
 	/*if buffer id, packet out*/
-    if(fm.buffer_id ！= UINT32_MAX){
+    uint32_t buffer_id = lookup_in_queue(&fm.match.flow);
+    if(buffer_id != UINT32_MAX){
     	struct db_packet *packet;
     	struct ofproto_packet_out opo;
-        packet = cache_pop(fm.buffer_id);
+        packet = cache_pop(buffer_id);
         while(packet != NULL){
-    		printf("\nsend packet out, queue_id: %d\n", i);
     		opo.flow = &fm.match.flow;
     		opo.packet = packet;
     		opo.ofpacts = fm.ofpacts;
@@ -5834,8 +5834,7 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
     			ofproto_packet_out_finish(ofproto, &opo);
     		}
     		ovs_mutex_unlock(&ofproto_mutex);
-    		printf("\nsend packet out end, queue_id: %d\n", i);
-            packet = cache_pop(fm.buffer_id);
+            packet = cache_pop(buffer_id);
     	}
     }  
 
