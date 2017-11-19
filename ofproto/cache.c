@@ -165,7 +165,7 @@ uint32_t lookup_in_queue(struct flow *flow){
     struct cache_table_head *head = table.head;
     uint32_t queue_id = UINT32_MAX;
     while(head != NULL){
-       if(compare_cache_key(head->key, upcall_key)==TRUE && head->queue_head!=NULL){
+       if(compare_cache_key(head->key, key)==TRUE && head->queue_head!=NULL){
             queue_id = head->queue_id;
             break;
        }

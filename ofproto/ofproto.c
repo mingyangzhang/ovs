@@ -5817,6 +5817,7 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
 	
 	/*if buffer id, packet out*/
     uint32_t buffer_id = lookup_in_queue(&fm.match.flow);
+    printf("\nbuffer_id:%d\n", buffer_id);
     if(buffer_id != UINT32_MAX){
     	struct db_packet *packet;
     	struct ofproto_packet_out opo;
