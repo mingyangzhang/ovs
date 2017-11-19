@@ -115,6 +115,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
 
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
     qhead->key = upcall_key;
+    print_flow_key(upcall_key);
     Node node = (Node)malloc(sizeof(struct cache_node));
     node->next = NULL;
     node->pckt = packet;
@@ -161,7 +162,8 @@ uint32_t lookup_in_queue(struct flow *flow){
     key->nw_dst = flow->nw_dst;
     key->tp_src = flow->tp_src;
     key->tp_dst = flow->tp_dst;
-
+    printf("\nlook up in queue\n");
+    print_flow_key(key);
     struct cache_table_head *head = table.head;
     uint32_t queue_id = UINT32_MAX;
     while(head != NULL){
