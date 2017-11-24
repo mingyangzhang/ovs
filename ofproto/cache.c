@@ -65,9 +65,9 @@ BOOL compare_eth_addr(const struct eth_addr* eth_addr1, const struct eth_addr* e
     return eth_addr_equal;
 }
 
-BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key2){
-    // if(key1->in_port.ofp_port != key2->in_port.ofp_port)
-    //     return FALSE;
+BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key2, BOOL inport){
+    if(key1->in_port.ofp_port != key2->in_port.ofp_port && inport==TRUE)
+        return FALSE;
     if(compare_eth_addr(&key1->dl_dst, &key2->dl_dst)!=TRUE)
         return FALSE;
     if(compare_eth_addr(&key1->dl_src, &key2->dl_src)!=TRUE)
@@ -95,7 +95,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     upcall_key->tp_dst = flow->tp_dst;
 
     while(head != NULL){
-       if(compare_cache_key(head->key, upcall_key)==TRUE){
+       if(compare_cache_key(head->key, upcall_key, TRUE)==TRUE){
             Node node = (Node)malloc(sizeof(struct cache_node));
             node->next = NULL;
             node->pckt = packet;
@@ -167,7 +167,7 @@ uint32_t lookup_in_queue(struct flow *flow){
     struct cache_table_head *head = table.head;
     uint32_t queue_id = UINT32_MAX;
     while(head != NULL){
-       if(compare_cache_key(head->key, key)==TRUE && head->queue_head!=NULL){
+       if(compare_cache_key(head->key, key, FALSE)==TRUE && head->queue_head!=NULL){
             queue_id = head->queue_id;
             break;
        }
