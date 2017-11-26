@@ -65,6 +65,19 @@ BOOL compare_eth_addr(const struct eth_addr* eth_addr1, const struct eth_addr* e
     return eth_addr_equal;
 }
 
+BOOL is_flood(const struct eth_addr* eth_addr){
+    BOOL is_flood = TRUE;
+    int i;
+    for(i=0;i<3;i++){
+        if(eth_addr->be16[i] != 65535){
+            is_flood = FALSE;
+            break;
+        }
+    }
+    return is_flood;
+}
+
+
 BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key2, BOOL inport){
     if(key1->in_port.ofp_port != key2->in_port.ofp_port && inport==TRUE)
         return FALSE;
@@ -84,6 +97,10 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
 }
 
 uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
+	if(is_flood(flow->dl_dst)==TRUE){
+		// if it is a flood packet, do not enqueue
+		return 1;
+	}
     struct cache_table_head *head = table.head;
     struct cache_key *upcall_key = (struct cache_key *)malloc(sizeof(struct cache_key));
     upcall_key->in_port = flow->in_port;
@@ -103,13 +120,13 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
                 head->queue_head = node;
                 head->queue_tail = node;
                 head->num_of_packet = 1;
-                print_flow_key(upcall_key);
+                //print_flow_key(upcall_key);
                 return UINT32_MAX;
             }
             head->queue_tail->next = node;
             head->queue_tail = node;
             head->num_of_packet++;
-            print_flow_key(upcall_key);
+            //print_flow_key(upcall_key);
             return UINT32_MAX;
        }
        head = head->next;
