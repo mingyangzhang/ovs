@@ -72,14 +72,14 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
         return FALSE;
     if(compare_eth_addr(&key1->dl_src, &key2->dl_src)!=TRUE)
         return FALSE;
-    if(key1->nw_src != key2->nw_src)
+/*    if(key1->nw_src != key2->nw_src)
         return FALSE;
     if(key1->nw_dst != key2->nw_dst)
         return FALSE;
     if(key1->tp_src != key2->tp_src)
         return FALSE;
     if(key1->tp_dst != key2->tp_dst)
-        return FALSE;
+        return FALSE; */
     return TRUE;
 }
 
@@ -103,11 +103,13 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
                 head->queue_head = node;
                 head->queue_tail = node;
                 head->num_of_packet = 1;
+                print_flow_key(upcall_key);
                 return UINT32_MAX;
             }
             head->queue_tail->next = node;
             head->queue_tail = node;
             head->num_of_packet++;
+            print_flow_key(upcall_key);
             return UINT32_MAX;
        }
        head = head->next;
@@ -162,8 +164,8 @@ uint32_t lookup_in_queue(struct flow *flow){
     key->nw_dst = flow->nw_dst;
     key->tp_src = flow->tp_src;
     key->tp_dst = flow->tp_dst;
-    printf("\nlook up in queue");
-    print_flow_key(key);
+    // printf("\nlook up in queue");
+    // print_flow_key(key);
     struct cache_table_head *head = table.head;
     uint32_t queue_id = UINT32_MAX;
     while(head != NULL){
