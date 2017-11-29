@@ -14,10 +14,8 @@
 #define FALSE 0
 
 uint32_t QUEUE_ID;
-QUEUE_ID.ofp_port = 0;
 
 /*packet from this port should be locked in initialization*/
-union flow_in_port IN_PORT;
 
 struct cache_table {
     int num_of_queue;
@@ -151,7 +149,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
     qhead->key = upcall_key;
     qhead->pckt_in = TRUE;
-    if(upcall_key->in_port.ofp_port == IN_PORT.ofp_port){
+    if(upcall_key->in_port.ofp_port == 0){
         qhead->pckt_in = FALSE;
         table.locked_queue = qhead;
     }

@@ -4531,6 +4531,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
         return;
     }
     printf("\nsend packet in: %d\n", buffer_id);
+    printf("in_port: %" PRIu32 "\n", ctx->xin->upcall_flow->in_port.ofp_port);
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
