@@ -13,10 +13,11 @@
 #define TRUE 1
 #define FALSE 0
 
-uint32_t QUEUE_ID = 0;
+uint32_t QUEUE_ID;
+QUEUE_ID.ofp_port = 0;
 
 /*packet from this port should be locked in initialization*/
-union flow_in_port IN_PORT = 0;
+union flow_in_port IN_PORT;
 
 struct cache_table {
     int num_of_queue;
@@ -85,7 +86,7 @@ BOOL is_flood(const struct eth_addr* eth_addr){
 
 uint32_t queue_id(QueueHead head){
     if(head->pckt_in==TRUE){
-        head->pckt_in==FALSE;
+        head->pckt_in = FALSE;
         return head->queue_id;
     }
     return UINT32_MAX;
@@ -114,7 +115,7 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
 }
 
 uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
-	if(is_flood(flow->dl_dst)==TRUE){
+	if(is_flood(&flow->dl_dst)==TRUE){
 		// if it is a flood packet, do not enqueue
 		return 1;
 	}
@@ -150,7 +151,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
     qhead->key = upcall_key;
     qhead->pckt_in = TRUE;
-    if(upcall_key->in_port == IN_PORT){
+    if(upcall_key->in_port.ofp_port == IN_PORT.ofp_port){
         qhead->pckt_in = FALSE;
         table.locked_queue = qhead;
     }
