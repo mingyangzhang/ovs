@@ -48,6 +48,7 @@
 #include "openvswitch/vconn.h"
 #include "openvswitch/vlog.h"
 #include "lib/vswitch-idl.h"
+#include "ofproto/settings.h"
 
 VLOG_DEFINE_THIS_MODULE(vswitchd);
 
