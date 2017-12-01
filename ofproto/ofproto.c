@@ -64,6 +64,7 @@
 #include "util.h"
 #include "flow.h"
 
+#include "setttings.h"
 #include "cache.h"
 
 
@@ -5816,27 +5817,29 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                     ofproto->n_tables);
 	
 	/*if buffer id, packet out*/
-    uint32_t buffer_id = lookup_in_queue(&fm.match.flow);
-    printf("\nbuffer_id:%d\n", buffer_id);
-    if(buffer_id != UINT32_MAX){
-    	struct db_packet *packet;
-    	struct ofproto_packet_out opo;
-        packet = cache_pop(buffer_id);
-        while(packet != NULL){
-    		opo.flow = &fm.match.flow;
-    		opo.packet = packet;
-    		opo.ofpacts = fm.ofpacts;
-    		opo.ofpacts_len = fm.ofpacts_len;
-    		
-    		ovs_mutex_lock(&ofproto_mutex);
-    		opo.version = ofproto->tables_version;
-    		error = ofproto_packet_out_start(ofproto, &opo);
-    		if (!error) {
-    			ofproto_packet_out_finish(ofproto, &opo);
-    		}
-    		ovs_mutex_unlock(&ofproto_mutex);
+    if(buffer_enable) {
+        uint32_t buffer_id = lookup_in_queue(&fm.match.flow);
+        printf("\nbuffer_id:%d\n", buffer_id);
+        if(buffer_id != UINT32_MAX){
+        	struct db_packet *packet;
+        	struct ofproto_packet_out opo;
             packet = cache_pop(buffer_id);
-    	}
+            while(packet != NULL){
+        		opo.flow = &fm.match.flow;
+        		opo.packet = packet;
+        		opo.ofpacts = fm.ofpacts;
+        		opo.ofpacts_len = fm.ofpacts_len;
+        		
+        		ovs_mutex_lock(&ofproto_mutex);
+        		opo.version = ofproto->tables_version;
+        		error = ofproto_packet_out_start(ofproto, &opo);
+        		if (!error) {
+        			ofproto_packet_out_finish(ofproto, &opo);
+        		}
+        		ovs_mutex_unlock(&ofproto_mutex);
+                packet = cache_pop(buffer_id);
+        	}
+        }
     }  
 
     if (!error) {

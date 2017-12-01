@@ -70,6 +70,22 @@ int
 main(int argc, char *argv[])
 {	
 	printf("\n\n\n\n vswitchd started! \n\n\n\n");
+	char *disable_buffer = "--disable_buffer";
+	char *lock_queue = "--lock_queue";
+	char *args[];
+	args = argv+1;
+	int arg_len = argc;
+	while(arg_len->1){
+		printf("%s\n",*args);
+		if(strcmp(args, disable_buffer)==0){
+			buffer_enable = false;
+			break;
+		}
+		if(strcmp(args, lock_queue)==0){
+			lock_port = atoi(args+1);
+		}
+		args++;
+	}
     char *unixctl_path = NULL;
     struct unixctl_server *unixctl;
     char *remote;

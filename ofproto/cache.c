@@ -8,6 +8,7 @@
 #include "dpif.h"
 #include "dp-packet.h"
 #include "packets.h"
+#include "settings.h"
 
 #define BOOL int
 #define TRUE 1
@@ -151,7 +152,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
     qhead->key = upcall_key;
     qhead->pckt_in = TRUE;
-    if(upcall_key->in_port.ofp_port == 0){
+    if(upcall_key->in_port.ofp_port == lock_port){
         qhead->pckt_in = FALSE;
         table.locked_queue = qhead;
     }

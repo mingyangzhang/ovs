@@ -65,6 +65,7 @@
 #include "tunnel.h"
 #include "util.h"
 
+#include "settings.h"
 #include "cache.h"
 
 COVERAGE_DEFINE(xlate_actions);
@@ -4527,11 +4528,13 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
 	if(ctx->xin->upcall_flow->nw_tos == 255){
 		unlocked_queue();
 	}
-    buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
-	//print_table_info();
-    // Do not send buffer id if it is not a new queue;
-    if(buffer_id == UINT32_MAX){
-        return;
+    if(buffer_enable) {
+        buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
+    	//print_table_info();
+        // Do not send buffer id if it is not a new queue;
+        if(buffer_id == UINT32_MAX){
+            return;
+        }
     }
     printf("\nsend packet in: %d\n", buffer_id);
     printf("in_port: %" PRIu32 "\n", ctx->xin->upcall_flow->in_port.ofp_port);
