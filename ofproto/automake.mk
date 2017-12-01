@@ -15,6 +15,7 @@ ofproto_libofproto_la_SOURCES = \
 	ofproto/bond.h \
 	ofproto/cache.c \
 	ofproto/cache.h \
+	ofproto/settings.h \
 	ofproto/collectors.c \
 	ofproto/collectors.h \
 	ofproto/connmgr.c \
