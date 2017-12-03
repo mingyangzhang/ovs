@@ -75,16 +75,29 @@ main(int argc, char *argv[])
     buffer_enable = true;
     lock_port = 0;
 	int i;
-    for(int i=1; i<argc; i++){
+    for(i=1; i<argc; i++){
         if(strcmp(argv[i], disable_buffer)==0){
             buffer_enable = false;
+            int j = i+1;
+            for(;j<argc;j++){
+                argv[j-1] = argv[j]; 
+            }
+            argc--;
             break;
         }
         if(strcmp(argv[i], lock_queue)==0){
             lock_port = atoi(argv[i++]);
+            int j = i+1;
+            for(;j<argc;j++){
+                argv[j-2] = argv[j]; 
+            }
+            argc -= 2;
         }
     }
-
+    for(i=1; i<argc; i++){
+        printf("\n%s", argv[i]);
+    }
+    printf("\nargv end");
     char *unixctl_path = NULL;
     struct unixctl_server *unixctl;
     char *remote;
