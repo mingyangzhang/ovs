@@ -93,7 +93,7 @@ uint32_t queue_id(QueueHead head){
 
 void unlocked_queue(){
     if(table.locked_queue != NULL && table.locked_queue->pckt_in == FALSE) {
-        printf("\nunlock queue %d\n", table.locked_queue->queue_id);
+        printf("unlock queue %d\n", table.locked_queue->queue_id);
         table.locked_queue->pckt_in = TRUE;
     }
 }
@@ -163,7 +163,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     qhead->num_of_packet = 1;
     if(upcall_key->in_port.ofp_port == lock_port){
         qhead->pckt_in = FALSE;
-        printf("\nlock queue %d\n", qhead->queue_id);
+        printf("lock queue %d\n", qhead->queue_id);
         table.locked_queue = qhead;
     }
     if(table.head == NULL){
