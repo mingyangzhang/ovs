@@ -64,7 +64,7 @@
 #include "util.h"
 #include "flow.h"
 
-#include "setttings.h"
+#include "settings.h"
 #include "cache.h"
 
 
