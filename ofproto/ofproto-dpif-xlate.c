@@ -4525,18 +4525,18 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     }
     size_t packet_len = dp_packet_size(packet);
     uint32_t buffer_id;
-	if(ctx->xin->upcall_flow->nw_tos == 1){
-		unlocked_queue();
-	}
+    if(ctx->xin->upcall_flow->nw_tos == 1){
+        unlocked_queue();
+    }
     if(buffer_enable) {
         buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
-    	//print_table_info();
+        //print_table_info();
         // Do not send buffer id if it is not a new queue;
         if(buffer_id == UINT32_MAX){
             return;
         }
+        printf("\nsend packet in: %d\n", buffer_id);
     }
-    printf("\nsend packet in: %d", buffer_id);
     //printf("in_port: %" PRIu32 "\n", ctx->xin->upcall_flow->in_port.ofp_port);
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
@@ -4556,7 +4556,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
                     .userdata_len = userdata_len,
                 }
             },
-			.buffer_id = buffer_id,
+            .buffer_id = buffer_id,
             .max_len = len,
         },
     };

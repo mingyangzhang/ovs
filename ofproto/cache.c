@@ -92,9 +92,10 @@ uint32_t queue_id(QueueHead head){
 }
 
 void unlocked_queue(){
-	if(table.locked_queue != NULL && table.locked_queue->pckt_in == FALSE) {
-		table.locked_queue->pckt_in = TRUE;
-	}
+    if(table.locked_queue != NULL && table.locked_queue->pckt_in == FALSE) {
+        printf("\nunlock queue %d\n", table.locked_queue->queue_id);
+        table.locked_queue->pckt_in = TRUE;
+    }
 }
 
 BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key2, BOOL inport){
@@ -116,10 +117,10 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
 }
 
 uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
-	if(is_flood(&flow->dl_dst)==TRUE){
-		// if it is a flood packet, do not enqueue
-		return UINT32_MAX - 1;
-	}
+    if(is_flood(&flow->dl_dst)==TRUE){
+        // if it is a flood packet, do not enqueue
+        return UINT32_MAX - 1;
+    }
     struct cache_table_head *head = table.head;
     struct cache_key *upcall_key = (struct cache_key *)malloc(sizeof(struct cache_key));
     upcall_key->in_port = flow->in_port;
@@ -152,10 +153,6 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     QueueHead qhead = (QueueHead)malloc(sizeof(struct cache_table_head));
     qhead->key = upcall_key;
     qhead->pckt_in = TRUE;
-    if(upcall_key->in_port.ofp_port == lock_port){
-        qhead->pckt_in = FALSE;
-        table.locked_queue = qhead;
-    }
     Node node = (Node)malloc(sizeof(struct cache_node));
     node->next = NULL;
     node->pckt = packet;
@@ -164,6 +161,11 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     qhead->queue_id = QUEUE_ID++;
     qhead->next = NULL;
     qhead->num_of_packet = 1;
+    if(upcall_key->in_port.ofp_port == lock_port){
+        qhead->pckt_in = FALSE;
+        printf("\nlock queue %d\n", qhead->queue_id);
+        table.locked_queue = qhead;
+    }
     if(table.head == NULL){
        table.head = qhead;
        table.tail = table.head;
