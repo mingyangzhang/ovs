@@ -86,7 +86,8 @@ main(int argc, char *argv[])
             break;
         }
         if(strcmp(argv[i], lock_queue)==0){
-            lock_port = atoi(argv[i++]);
+            lock_port = atoi(argv[++i]);
+            printf("lock_queue\n%s", lock_port);
             int j = i+1;
             for(;j<argc;j++){
                 argv[j-2] = argv[j]; 
@@ -94,10 +95,6 @@ main(int argc, char *argv[])
             argc -= 2;
         }
     }
-    for(i=1; i<argc; i++){
-        printf("\n%s", argv[i]);
-    }
-    printf("\nargv end");
     char *unixctl_path = NULL;
     struct unixctl_server *unixctl;
     char *remote;
