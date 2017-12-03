@@ -5797,7 +5797,7 @@ static enum ofperr
 handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
     OVS_EXCLUDED(ofproto_mutex)
 {
-    printf("\nhandle flow mod!\n");
+    //printf("\nhandle flow mod!\n");
     struct ofproto *ofproto = ofconn_get_ofproto(ofconn);
     struct ofputil_flow_mod fm;
     uint64_t ofpacts_stub[1024 / 8];
@@ -5819,7 +5819,7 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
 	/*if buffer id, packet out*/
     if(buffer_enable) {
         uint32_t buffer_id = lookup_in_queue(&fm.match.flow);
-        printf("\nbuffer_id:%d\n", buffer_id);
+        //printf("\nbuffer_id:%d\n", buffer_id);
         if(buffer_id != UINT32_MAX){
         	struct db_packet *packet;
         	struct ofproto_packet_out opo;

@@ -92,7 +92,7 @@ uint32_t queue_id(QueueHead head){
 }
 
 void unlocked_queue(){
-	if(table.locked_queue != NULL) {
+	if(table.locked_queue != NULL && table.locked_queue->pckt_in == FALSE) {
 		table.locked_queue->pckt_in = TRUE;
 	}
 }
@@ -118,7 +118,7 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
 uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
 	if(is_flood(&flow->dl_dst)==TRUE){
 		// if it is a flood packet, do not enqueue
-		return 1;
+		return UINT32_MAX - 1;
 	}
     struct cache_table_head *head = table.head;
     struct cache_key *upcall_key = (struct cache_key *)malloc(sizeof(struct cache_key));
@@ -168,13 +168,13 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
        table.head = qhead;
        table.tail = table.head;
        table.num_of_queue++;
-       return queue_id(head);
+       return queue_id(qhead);
     }
 
     table.tail->next = qhead;
     table.tail = qhead;
     table.num_of_queue++;
-    return queue_id(head);
+    return queue_id(qhead);
 }
 
 struct dp_packet* cache_pop(uint32_t queue_id){

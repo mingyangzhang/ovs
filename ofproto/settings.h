@@ -1,3 +1,3 @@
 #include <inttypes.h>
-bool buffer_enable = true;
-uint32_t lock_port = 0; 
+bool buffer_enable;
+uint32_t lock_port; 
