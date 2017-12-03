@@ -4525,7 +4525,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     }
     size_t packet_len = dp_packet_size(packet);
     uint32_t buffer_id;
-	if(ctx->xin->upcall_flow->nw_tos == 255){
+	if(ctx->xin->upcall_flow->nw_tos == 1){
 		unlocked_queue();
 	}
     if(buffer_enable) {

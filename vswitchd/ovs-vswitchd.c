@@ -87,7 +87,6 @@ main(int argc, char *argv[])
         }
         if(strcmp(argv[i], lock_queue)==0){
             lock_port = atoi(argv[++i]);
-            printf("lock_queue\n%s", lock_port);
             int j = i+1;
             for(;j<argc;j++){
                 argv[j-2] = argv[j]; 
