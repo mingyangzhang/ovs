@@ -95,6 +95,7 @@ void unlocked_queue(){
     if(table.locked_queue != NULL && table.locked_queue->pckt_in == FALSE) {
         printf("unlock queue %d\n", table.locked_queue->queue_id);
         table.locked_queue->pckt_in = TRUE;
+        lock_port = 0;
     }
 }
 
@@ -210,6 +211,7 @@ uint32_t lookup_in_queue(struct flow *flow){
     uint32_t queue_id = UINT32_MAX;
     while(head != NULL){
        if(compare_cache_key(head->key, key, FALSE)==TRUE && head->queue_head!=NULL){
+            //printf("packet number: %d\n", head->num_of_packet);
             queue_id = head->queue_id;
             break;
        }
