@@ -4568,18 +4568,17 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
             },
         };
         flow_get_metadata(&ctx->xin->flow, &am->pin.up.base.flow_metadata);
-    }
+        /* Async messages are only sent once, so if we send one now, no
+         * xlate cache entry is created.  */
+        if (ctx->xin->allow_side_effects) {
+            ofproto_dpif_send_async_msg(ctx->xbridge->ofproto, am);
+        } else /* xcache */ {
+            struct xc_entry *entry;
 
-    /* Async messages are only sent once, so if we send one now, no
-     * xlate cache entry is created.  */
-    if (ctx->xin->allow_side_effects) {
-        ofproto_dpif_send_async_msg(ctx->xbridge->ofproto, am);
-    } else /* xcache */ {
-        struct xc_entry *entry;
-
-        entry = xlate_cache_add_entry(ctx->xin->xcache, XC_CONTROLLER);
-        entry->controller.ofproto = ctx->xbridge->ofproto;
-        entry->controller.am = am;
+            entry = xlate_cache_add_entry(ctx->xin->xcache, XC_CONTROLLER);
+            entry->controller.ofproto = ctx->xbridge->ofproto;
+            entry->controller.am = am;
+        }
     }
     dp_packet_delete(packet);
 }
