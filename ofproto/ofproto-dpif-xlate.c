@@ -4529,12 +4529,9 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     bool enqueue = true;
     if(ctx->xin->upcall_flow->nw_tos == 252 && lock_ip != 0){
         unlocked_queue();
-        return;
+        enqueue = false;
     }
-    else if(ctx->xin->upcall_flow->nw_tos == 251 && !tos251_sent){
-         tos251_sent = true;
-    }
-    else if(ctx->xin->upcall_flow->nw_tos == 250){
+    else if(ctx->xin->upcall_flow->nw_tos == 251){
          enqueue = false;
     }
     if(buffer_enable && enqueue) {
