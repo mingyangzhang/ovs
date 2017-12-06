@@ -74,6 +74,8 @@ main(int argc, char *argv[])
 	char *lock_queue = "--lock_queue";
     buffer_enable = true;
     lock_port = 0;
+    lock_ip = 0;
+    tos251_sent = false;
 	int i;
     for(i=1; i<argc; i++){
         if(strcmp(argv[i], disable_buffer)==0){

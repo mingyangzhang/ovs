@@ -96,6 +96,7 @@ void unlocked_queue(){
         printf("unlock queue %d\n", table.locked_queue->queue_id);
         table.locked_queue->pckt_in = TRUE;
         lock_port = 0;
+        lock_ip = 0;
     }
 }
 
@@ -162,7 +163,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     qhead->queue_id = QUEUE_ID++;
     qhead->next = NULL;
     qhead->num_of_packet = 1;
-    if(upcall_key->in_port.ofp_port == lock_port){
+    if(upcall_key->nw_src == lock_ip){
         qhead->pckt_in = FALSE;
         printf("lock queue %d\n", qhead->queue_id);
         table.locked_queue = qhead;

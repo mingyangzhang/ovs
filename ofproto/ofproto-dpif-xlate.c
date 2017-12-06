@@ -4525,42 +4525,53 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     }
     size_t packet_len = dp_packet_size(packet);
     uint32_t buffer_id;
-    if(ctx->xin->upcall_flow->nw_tos == 1 &&  && lock_port != 0){
+    bool send_pckt_in = true;
+    bool enqueue = true;
+    if(ctx->xin->upcall_flow->nw_tos == 252 && lock_ip != 0){
         unlocked_queue();
+        return;
     }
-    if(buffer_enable) {
+    else if(ctx->xin->upcall_flow->nw_tos == 251 && !tos251_sent){
+         tos251_sent = true;
+    }
+    else if(ctx->xin->upcall_flow->nw_tos == 250){
+         enqueue = false;
+    }
+    if(buffer_enable && enqueue) {
         buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
         //print_table_info();
         // Do not send buffer id if it is not a new queue;
         if(buffer_id == UINT32_MAX){
             return;
         }
-        printf("send packet in: %d\n", buffer_id);
     }
     //printf("in_port: %" PRIu32 "\n", ctx->xin->upcall_flow->in_port.ofp_port);
-    struct ofproto_async_msg *am = xmalloc(sizeof *am);
-    *am = (struct ofproto_async_msg) {
-        .controller_id = controller_id,
-        .oam = OAM_PACKET_IN,
-        .pin = {
-            .up = {
-                .base = {
-                    .packet = dp_packet_steal_data(packet),
-                    .packet_len = packet_len,
-                    .reason = reason,
-                    .table_id = ctx->table_id,
-                    .cookie = ctx->rule_cookie,
-                    .userdata = (userdata_len
-                                 ? xmemdup(userdata, userdata_len)
-                                 : NULL),
-                    .userdata_len = userdata_len,
-                }
+    if(send_pckt_in){
+        printf("send packet in: %d\n", buffer_id);
+        struct ofproto_async_msg *am = xmalloc(sizeof *am);
+        *am = (struct ofproto_async_msg) {
+            .controller_id = controller_id,
+            .oam = OAM_PACKET_IN,
+            .pin = {
+                .up = {
+                    .base = {
+                        .packet = dp_packet_steal_data(packet),
+                        .packet_len = packet_len,
+                        .reason = reason,
+                        .table_id = ctx->table_id,
+                        .cookie = ctx->rule_cookie,
+                        .userdata = (userdata_len
+                                     ? xmemdup(userdata, userdata_len)
+                                     : NULL),
+                        .userdata_len = userdata_len,
+                    }
+                },
+                .buffer_id = buffer_id,
+                .max_len = len,
             },
-            .buffer_id = buffer_id,
-            .max_len = len,
-        },
-    };
-    flow_get_metadata(&ctx->xin->flow, &am->pin.up.base.flow_metadata);
+        };
+        flow_get_metadata(&ctx->xin->flow, &am->pin.up.base.flow_metadata);
+    }
 
     /* Async messages are only sent once, so if we send one now, no
      * xlate cache entry is created.  */
