@@ -161,6 +161,7 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet) {
     qhead->queue_id = QUEUE_ID++;
     qhead->next = NULL;
     qhead->num_of_packet = 1;
+    printf("add new queue: %d", qhead->queue_id);
     if(upcall_key->nw_src == lock_ip){
         qhead->pckt_in = FALSE;
         printf("lock queue %d\n", qhead->queue_id);
@@ -188,7 +189,9 @@ struct dp_packet* cache_pop(uint32_t queue_id) {
         qhead->num_of_packet--;
         if(qhead->num_of_packet==0) {
             table.head = qhead->next;
+            printf("delete queue: %d", qhead->queue_id);
             free(qhead);
+            table.num_of_queue--;
         }
         return packet;
     }
@@ -210,7 +213,9 @@ struct dp_packet* cache_pop(uint32_t queue_id) {
     qhead->num_of_packet--;
     if(qhead->num_of_packet==0) {
         bf_qhead->next = qhead->next;
+        printf("delete queue: %d", qhead->queue_id);
         free(qhead);
+        table.num_of_queue--;
     }
     return packet;
 }
