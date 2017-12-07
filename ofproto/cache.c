@@ -95,8 +95,6 @@ void unlocked_queue(){
     if(table.locked_queue != NULL && table.locked_queue->pckt_in == FALSE) {
         printf("unlock queue %d\n", table.locked_queue->queue_id);
         table.locked_queue->pckt_in = TRUE;
-        lock_port = 0;
-        lock_ip = 0;
     }
 }
 
@@ -118,7 +116,7 @@ BOOL compare_cache_key(const struct cache_key *key1, const struct cache_key *key
     return TRUE;
 }
 
-uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
+uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet) {
     if(is_flood(&flow->dl_dst)==TRUE){
         // if it is a flood packet, do not enqueue
         return UINT32_MAX - 1;
@@ -181,10 +179,26 @@ uint32_t cache_enqueue(struct flow *flow, const struct dp_packet *packet){
     return queue_id(qhead);
 }
 
-struct dp_packet* cache_pop(uint32_t queue_id){
+struct dp_packet* cache_pop(uint32_t queue_id) {
     QueueHead qhead = table.head;
+    if(qhead!=NULL && qhead->queue_id==queue_id) {
+        Node p = qhead->queue_head;
+        struct dp_packet * packet = p->pckt;
+        free(p);
+        qhead->num_of_packet--;
+        if(qhead->num_of_packet==0) {
+            table.head = qhead->next;
+            free(qhead);
+        }
+        return packet;
+    }
+    else{
+        qhead = qhead->next;
+    }
+    QueueHead bf_qhead = table.head;
     while(qhead!=NULL && qhead->queue_id!=queue_id){
         qhead = qhead->next;
+        bf_qhead = bf_qhead->next;
     }
     if(qhead==NULL || qhead->queue_head==NULL){
         return NULL;
@@ -194,6 +208,10 @@ struct dp_packet* cache_pop(uint32_t queue_id){
     struct dp_packet * packet = p->pckt;
     free(p);
     qhead->num_of_packet--;
+    if(qhead->num_of_packet==0) {
+        bf_qhead->next = qhead->next;
+        free(qhead);
+    }
     return packet;
 }
 
