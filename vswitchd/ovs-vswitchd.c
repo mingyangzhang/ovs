@@ -48,6 +48,7 @@
 #include "openvswitch/vconn.h"
 #include "openvswitch/vlog.h"
 #include "lib/vswitch-idl.h"
+#include "ofproto/settings.h"
 
 VLOG_DEFINE_THIS_MODULE(vswitchd);
 
@@ -67,7 +68,33 @@ struct ovs_vswitchd_exit_args {
 
 int
 main(int argc, char *argv[])
-{
+{	
+    printf("\n\n\n\n vswitchd started! \n\n\n\n");
+    char *disable_buffer = "--disable_buffer";
+    char *lock_queue = "--lock_queue";
+    buffer_enable = true;
+    lock_port = 0;
+    lock_ip = 16777226;
+    int i;
+    for(i=1; i<argc; i++){
+        if(strcmp(argv[i], disable_buffer)==0){
+            buffer_enable = false;
+            int j = i+1;
+            for(;j<argc;j++){
+                argv[j-1] = argv[j]; 
+            }
+            argc--;
+            break;
+        }
+        if(strcmp(argv[i], lock_queue)==0){
+            lock_port = atoi(argv[++i]);
+            int j = i+1;
+            for(;j<argc;j++){
+                argv[j-2] = argv[j]; 
+            }
+            argc -= 2;
+        }
+    }
     char *unixctl_path = NULL;
     struct unixctl_server *unixctl;
     char *remote;

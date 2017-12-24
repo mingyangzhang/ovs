@@ -63,6 +63,8 @@ struct ofproto_async_msg {
     /* OAM_PACKET_IN. */
     struct {
         struct ofputil_packet_in_private up;
+		uint32_t buffer_id; /* buffer id for cache*/
+		uint8_t tos;
         int max_len;            /* From action, or -1 if none. */
     } pin;
 };

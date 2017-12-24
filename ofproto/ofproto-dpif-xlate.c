@@ -13,6 +13,7 @@
  * limitations under the License. */
 
 #include <config.h>
+#include <pthread.h>
 
 #include "ofproto/ofproto-dpif-xlate.h"
 
@@ -64,6 +65,9 @@
 #include "tnl-ports.h"
 #include "tunnel.h"
 #include "util.h"
+
+#include "settings.h"
+#include "cache.h"
 
 COVERAGE_DEFINE(xlate_actions);
 COVERAGE_DEFINE(xlate_actions_oversize);
@@ -3740,7 +3744,6 @@ compose_output_action__(struct xlate_ctx *ctx, ofp_port_t ofp_port,
     if (!check_output_prerequisites(ctx, xport, flow, check_stp)) {
         return;
     }
-
     if (flow->packet_type == htonl(PT_ETH)) {
         /* Strip Ethernet header for legacy L3 port. */
         if (xport->pt_mode == NETDEV_PT_LEGACY_L3) {
@@ -3748,7 +3751,6 @@ compose_output_action__(struct xlate_ctx *ctx, ofp_port_t ofp_port,
                                                ntohs(flow->dl_type));
         }
     }
-
     if (xport->peer) {
        apply_nested_clone_actions(ctx, xport, xport->peer);
        return;
@@ -3756,7 +3758,6 @@ compose_output_action__(struct xlate_ctx *ctx, ofp_port_t ofp_port,
 
     memcpy(flow_vlans, flow->vlans, sizeof flow_vlans);
     flow_nw_tos = flow->nw_tos;
-
     if (count_skb_priorities(xport)) {
         memset(&wc->masks.skb_priority, 0xff, sizeof wc->masks.skb_priority);
         if (dscp_from_skb_priority(xport, flow->skb_priority, &dscp)) {
@@ -3765,7 +3766,6 @@ compose_output_action__(struct xlate_ctx *ctx, ofp_port_t ofp_port,
             flow->nw_tos |= dscp;
         }
     }
-
     if (xport->is_tunnel) {
         struct in6_addr dst;
          /* Save tunnel metadata so that changes made due to
@@ -3805,7 +3805,6 @@ compose_output_action__(struct xlate_ctx *ctx, ofp_port_t ofp_port,
         odp_port = xport->odp_port;
         out_port = odp_port;
     }
-
     if (out_port != ODPP_NONE) {
         /* Commit accumulated flow updates before output. */
         xlate_commit_actions(ctx);
@@ -3863,7 +3862,6 @@ compose_output_action__(struct xlate_ctx *ctx, ofp_port_t ofp_port,
         ctx->sflow_n_outputs++;
         ctx->nf_output_iface = ofp_port;
     }
-
     if (mbridge_has_mirrors(ctx->xbridge->mbridge) && xport->xbundle) {
         mirror_packet(ctx, xport->xbundle,
                       xbundle_mirror_dst(xport->xbundle->xbridge,
@@ -4494,7 +4492,6 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
                           const uint8_t *userdata, size_t userdata_len)
 {
     struct dp_packet *packet;
-
     ctx->xout->slow |= SLOW_CONTROLLER;
     xlate_commit_actions(ctx);
     if (!ctx->xin->packet) {
@@ -4522,7 +4519,38 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
     }
 
     size_t packet_len = dp_packet_size(packet);
+    uint32_t buffer_id;
+    bool send_pckt_in = true;
+    bool enqueue = true;
+	void *packet_data = dp_packet_data(packet);
+	
+    if(((unsigned char*) packet_data)[15] == 252 && lock_ip != 0){
+        printf("*********Detected EndMarker*********\n");
+        unlocked_queue();
+        enqueue = false;
+    }
+    else if(((unsigned char*) packet_data)[15] == 251){
+        enqueue = false;
+    }
+    if(buffer_enable && enqueue) {
+        buffer_id = cache_enqueue(ctx->xin->upcall_flow, ctx->xin->packet);
+        printf("option in packet : %02x%02x\n", ((unsigned char*) packet_data)[36], ((unsigned char*) packet_data)[37]);
+		printf("dl_src: ");
+		int i;
+		for(i=0;i<3;i++){
+			printf("%" PRIu16 ".", ctx->xin->upcall_flow->dl_src.be16[i]);
+		}
+		// print_table_info();
+        // Do not send buffer id if it is not a new queue;
+        if(buffer_id == UINT32_MAX){
+            return;
+        }
+        //printf("send packet in: %d\n", buffer_id);
+    }
+    //printf("in_port: %" PRIu32 "\n", ctx->xin->upcall_flow->in_port.ofp_port);
 
+    if(send_pckt_in){
+    printf("send packet in: buffer id: %d", buffer_id);
     struct ofproto_async_msg *am = xmalloc(sizeof *am);
     *am = (struct ofproto_async_msg) {
         .controller_id = controller_id,
@@ -4541,6 +4569,8 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
                     .userdata_len = userdata_len,
                 }
             },
+//            .buffer_id = buffer_id,
+			.tos = ctx->xin->upcall_flow->nw_tos,
             .max_len = len,
         },
     };
@@ -4548,6 +4578,9 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
 
     /* Async messages are only sent once, so if we send one now, no
      * xlate cache entry is created.  */
+    /*if(ctx->xin->upcall_flow->nw_tos == 251){
+       printf("send packet in for tos 251\n");
+    }*/
     if (ctx->xin->allow_side_effects) {
         ofproto_dpif_send_async_msg(ctx->xbridge->ofproto, am);
     } else /* xcache */ {
@@ -4558,6 +4591,7 @@ execute_controller_action(struct xlate_ctx *ctx, int len,
         entry->controller.am = am;
     }
 
+    }
     dp_packet_delete(packet);
 }
 
@@ -4839,7 +4873,7 @@ xlate_output_action(struct xlate_ctx *ctx,
     ofp_port_t prev_nf_output_iface = ctx->nf_output_iface;
 
     ctx->nf_output_iface = NF_OUT_DROP;
-
+	
     switch (port) {
     case OFPP_IN_PORT:
         compose_output_action(ctx, ctx->xin->flow.in_port.ofp_port, NULL);
@@ -5319,6 +5353,8 @@ reversible_actions(const struct ofpact *ofpacts, size_t ofpacts_len)
         case OFPACT_UNROLL_XLATE:
         case OFPACT_WRITE_ACTIONS:
         case OFPACT_WRITE_METADATA:
+        case OFPACT_QCI:
+        case OFPACT_PDCP_SN:
             break;
 
         case OFPACT_CT:
@@ -5596,6 +5632,8 @@ freeze_unroll_actions(const struct ofpact *a, const struct ofpact *end,
         case OFPACT_CT:
         case OFPACT_CT_CLEAR:
         case OFPACT_NAT:
+        case OFPACT_QCI:
+        case OFPACT_PDCP_SN:
             /* These may not generate PACKET INs. */
             break;
 
@@ -6046,6 +6084,8 @@ recirc_for_mpls(const struct ofpact *a, struct xlate_ctx *ctx)
     /* If actions of a group require recirculation that can be detected
      * when translating them. */
     case OFPACT_GROUP:
+    case OFPACT_QCI:
+    case OFPACT_PDCP_SN:
         return;
 
     /* Set field that don't touch L3+ fields don't require recirculation. */
@@ -6538,7 +6578,15 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
             ctx_trigger_freeze(ctx);
             a = ofpact_next(a);
             break;
+
+        case OFPACT_QCI:
+            /* to be done */
+            break;
+
+        case OFPACT_PDCP_SN:
+            break;
         }
+
 
         /* Check if need to store this and the remaining actions for later
          * execution. */
@@ -6762,7 +6810,6 @@ xlate_wc_finish(struct xlate_ctx *ctx)
     /* Clear the metadata and register wildcard masks, because we won't
      * use non-header fields as part of the cache. */
     flow_wildcards_clear_non_packet_fields(ctx->wc);
-
     /* Wildcard ethernet fields if the original packet type was not
      * Ethernet. */
     if (ctx->xin->upcall_flow->packet_type != htonl(PT_ETH)) {
@@ -6885,7 +6932,6 @@ xlate_actions(struct xlate_in *xin, struct xlate_out *xout)
      * datapath doesn't retain tunneling information without us re-setting
      * it, so clear the tunnel data.
      */
-
     memset(&ctx.base_flow.tunnel, 0, sizeof ctx.base_flow.tunnel);
 
     ofpbuf_reserve(ctx.odp_actions, NL_A_U32_SIZE);
@@ -6976,7 +7022,6 @@ xlate_actions(struct xlate_in *xin, struct xlate_out *xout)
         ctx.error = XLATE_NO_RECIRCULATION_CONTEXT;
         goto exit;
     }
-
     /* Tunnel metadata in udpif format must be normalized before translation. */
     if (flow->tunnel.flags & FLOW_TNL_F_UDPIF) {
         const struct tun_table *tun_tab = ofproto_get_tun_tab(
@@ -7051,7 +7096,6 @@ xlate_actions(struct xlate_in *xin, struct xlate_out *xout)
             entry->dev.bfd = bfd_ref(in_port->bfd);
         }
     }
-
     if (!xin->frozen_state && process_special(&ctx, in_port)) {
         /* process_special() did all the processing for this packet.
          *
@@ -7075,7 +7119,6 @@ xlate_actions(struct xlate_in *xin, struct xlate_out *xout)
             && (!in_port || may_receive(in_port, &ctx))) {
             const struct ofpact *ofpacts;
             size_t ofpacts_len;
-
             if (xin->ofpacts) {
                 ofpacts = xin->ofpacts;
                 ofpacts_len = xin->ofpacts_len;
@@ -7342,7 +7385,6 @@ xlate_set_support(const struct ofproto_dpif *ofproto,
 {
     struct xlate_cfg *xcfg = ovsrcu_get(struct xlate_cfg *, &xcfgp);
     struct xbridge *xbridge = xbridge_lookup(xcfg, ofproto);
-
     if (xbridge) {
         xbridge->support = *support;
     }
