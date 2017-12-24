@@ -62,6 +62,11 @@
 #include "unaligned.h"
 #include "unixctl.h"
 #include "util.h"
+#include "flow.h"
+
+#include "settings.h"
+#include "cache.h"
+
 
 VLOG_DEFINE_THIS_MODULE(ofproto);
 
@@ -3568,6 +3573,7 @@ handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
     }
 
     po.ofpacts = ofpbuf_steal_data(&ofpacts);   /* Move to heap. */
+
     error = ofproto_packet_out_init(p, ofconn, &opo, &po);
     if (error) {
         free(po.ofpacts);
@@ -3581,7 +3587,6 @@ handle_packet_out(struct ofconn *ofconn, const struct ofp_header *oh)
         ofproto_packet_out_finish(p, &opo);
     }
     ovs_mutex_unlock(&ofproto_mutex);
-
     ofproto_packet_out_uninit(&opo);
     return error;
 }
@@ -5792,6 +5797,7 @@ static enum ofperr
 handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
     OVS_EXCLUDED(ofproto_mutex)
 {
+    //printf("\nhandle flow mod!\n");
     struct ofproto *ofproto = ofconn_get_ofproto(ofconn);
     struct ofputil_flow_mod fm;
     uint64_t ofpacts_stub[1024 / 8];
@@ -5809,6 +5815,39 @@ handle_flow_mod(struct ofconn *ofconn, const struct ofp_header *oh)
                                     &ofproto->vl_mff_map, &ofpacts,
                                     u16_to_ofp(ofproto->max_ports),
                                     ofproto->n_tables);
+	
+	/*if buffer id, packet out*/
+    if(buffer_enable) {
+        uint32_t buffer_id = lookup_in_queue(&fm.match.flow);
+        //printf("\nbuffer_id:%d\n", buffer_id);
+        if(buffer_id != UINT32_MAX){
+            printf("clear queue: %d\n", buffer_id);
+        	struct db_packet *packet;
+			struct db_packet *packet_out;
+        	struct ofproto_packet_out opo;
+            packet = cache_pop(buffer_id);
+            while(packet != NULL){
+				packet_out = dp_packet_clone(packet);
+				void *packet_data = dp_packet_data(packet_out);
+				printf("option out : %02x%02x\n", ((unsigned char*) packet_data)[36], ((unsigned char*) packet_data)[37]);
+        		opo.flow = &fm.match.flow;
+        		opo.packet = packet;
+        		opo.ofpacts = fm.ofpacts;
+        		opo.ofpacts_len = fm.ofpacts_len;
+        		
+        		ovs_mutex_lock(&ofproto_mutex);
+        		opo.version = ofproto->tables_version;
+        		error = ofproto_packet_out_start(ofproto, &opo);
+        		if (!error) {
+        			ofproto_packet_out_finish(ofproto, &opo);
+        		}
+        		ovs_mutex_unlock(&ofproto_mutex);
+                dp_packet_delete(packet);
+                packet = cache_pop(buffer_id);
+        	}
+        }
+    }
+
     if (!error) {
         struct openflow_mod_requester req = { ofconn, oh };
         error = handle_flow_mod__(ofproto, &fm, &req);

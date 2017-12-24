@@ -16,6 +16,8 @@
 
 #include <config.h>
 #include <errno.h>
+#include <execinfo.h>
+#include <pthread.h>
 
 #include "bfd.h"
 #include "bond.h"
@@ -223,6 +225,12 @@ void
 ofproto_dpif_send_async_msg(struct ofproto_dpif *ofproto,
                             struct ofproto_async_msg *am)
 {
+	printf("15th : %02x\n", ((unsigned char*) (am->pin.up.base.packet))[15]);
+	if(((unsigned char*) (am->pin.up.base.packet))[15] == 251) {
+
+		printf("251 ofproto_dpif_send_async_msg thread id: %d\n", pthread_self());
+		printf("251: send async msg to controller\n");
+	}
     if (!guarded_list_push_back(&ofproto->ams, &am->list_node, 1024)) {
         COVERAGE_INC(packet_in_overflow);
         ofproto_async_msg_free(am);
